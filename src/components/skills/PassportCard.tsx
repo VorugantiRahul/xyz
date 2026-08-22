@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { StatusBadge } from '../ui/StatusBadge';
 import { ProgressBar } from '../ui/ProgressBar';
 import { Button } from '../ui/Button';
-import { SkillProofData } from '../../api/types';
+import { SkillProofData, UserProfile } from '../../api/types';
+import { getUserProfile } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { getExplorerUrl } from '../../config/contracts';
 import {
   ShieldCheck,
@@ -16,7 +18,10 @@ import {
   Share2,
   Lock,
   Layers,
-  Sparkles
+  Sparkles,
+  User,
+  Briefcase,
+  Edit3
 } from 'lucide-react';
 
 export interface PassportCardProps {
@@ -32,8 +37,24 @@ export const PassportCard: React.FC<PassportCardProps> = ({
   primarySkillName = 'Solidity',
   isOwner = false,
 }) => {
+  const { user: authUser, setShowProfileModal } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  useEffect(() => {
+    if (isOwner && authUser) {
+      setProfile(authUser);
+      return;
+    }
+
+    const loadProfile = async () => {
+      const p = await getUserProfile(address);
+      setProfile(p);
+    };
+
+    loadProfile();
+  }, [address, isOwner, authUser]);
 
   const primarySkill = skills.find((s) => s.skill.toLowerCase() === primarySkillName.toLowerCase()) || skills[0];
 
@@ -52,7 +73,10 @@ export const PassportCard: React.FC<PassportCardProps> = ({
   const truncatedAddress = `${address.slice(0, 8)}...${address.slice(-6)}`;
   const freshnessPercent = primarySkill
     ? Math.max(0, 100 - (primarySkill.daysAgo / primarySkill.expiryDays) * 100)
-    : 90;
+    : 94;
+
+  const displayName = profile?.name || (isOwner ? 'Candidate' : 'Verified Developer');
+  const displayRole = profile?.role || 'Smart Contract Engineer';
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -60,13 +84,24 @@ export const PassportCard: React.FC<PassportCardProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2">
         <div className="flex items-center gap-2">
           <Badge variant="primary" size="md">
-            <ShieldCheck className="w-3.5 h-3.5 mr-1" />
-            Monad On-Chain Attestation
+            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-success" />
+            Monad On-Chain Living Proof
           </Badge>
-          <span className="text-xs text-text-muted">Standard v1.0</span>
+          <span className="text-xs text-text-muted font-mono">Chain ID: 10143</span>
         </div>
 
         <div className="flex items-center gap-2">
+          {isOwner && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowProfileModal(true)}
+              leftIcon={<Edit3 className="w-3.5 h-3.5" />}
+            >
+              Edit Identity
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"
@@ -85,7 +120,7 @@ export const PassportCard: React.FC<PassportCardProps> = ({
         <div className="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-success/15 blur-3xl pointer-events-none" />
 
         <div className="relative bg-surface rounded-3xl p-6 sm:p-10 backdrop-blur-xl space-y-8">
-          {/* Header Row */}
+          {/* Header Row: User Identity & Subject Address */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/80 pb-8">
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -100,13 +135,16 @@ export const PassportCard: React.FC<PassportCardProps> = ({
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-                    SkillPulse Passport
+                    {displayName}
                   </h1>
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary-light">
+                    {displayRole}
+                  </span>
                 </div>
-                <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
-                  Decentralized Proof of Competency Record
+                <p className="text-xs sm:text-sm text-text-secondary mt-1">
+                  {profile?.bio || 'SkillPulse Continuous Skill Verification Passport on Monad Testnet.'}
                 </p>
               </div>
             </div>
@@ -218,67 +256,39 @@ export const PassportCard: React.FC<PassportCardProps> = ({
             </div>
           )}
 
-          {/* All Skills Grid */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-text flex items-center gap-2">
-                <span>Verified Skill Records</span>
-                <Badge variant="secondary" size="sm">
-                  {skills.length} Total
-                </Badge>
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {skills.map((s) => {
-                const sFreshness = Math.max(0, 100 - (s.daysAgo / s.expiryDays) * 100);
-                return (
-                  <div
-                    key={s.skill}
-                    className="p-5 rounded-2xl bg-surface-secondary/60 border border-border flex flex-col justify-between hover:border-border-light transition-colors"
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <h4 className="text-base font-bold text-text">{s.skill}</h4>
-                        <span className="text-xs text-text-secondary">
-                          {s.daysAgo === 0 ? 'Verified today' : `${s.daysAgo} days ago`}
-                        </span>
+          {/* Secondary Skills Breakdown Grid */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+              Continuous Verification Portfolio
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {skills
+                .filter((s) => s.skill.toLowerCase() !== primarySkillName.toLowerCase())
+                .map((skill) => {
+                  const itemFreshness = Math.max(0, 100 - (skill.daysAgo / skill.expiryDays) * 100);
+                  return (
+                    <div
+                      key={skill.skill}
+                      className="p-5 rounded-2xl bg-surface-secondary/70 border border-border flex items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-text text-base">{skill.skill}</span>
+                          <StatusBadge status={skill.status} size="sm" />
+                        </div>
+                        <p className="text-xs text-text-muted">Verified {skill.lastVerified}</p>
                       </div>
-                      <StatusBadge status={s.status} size="sm" />
-                    </div>
 
-                    <div className="space-y-2 mt-2 pt-3 border-t border-border/50">
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-text-secondary">Score: <strong className="text-text font-mono">{s.score}/100</strong></span>
-                        <span className="text-text-muted font-mono">{Math.round(sFreshness)}% fresh</span>
+                      <div className="text-right">
+                        <span className="font-mono text-xl font-bold text-text">{skill.score}/100</span>
+                        <div className="w-24 mt-1">
+                          <ProgressBar value={itemFreshness} size="sm" variant="auto" />
+                        </div>
                       </div>
-                      <ProgressBar value={sFreshness} size="sm" variant="auto" />
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
-          </div>
-
-          {/* Passport Footer Seal */}
-          <div className="rounded-xl bg-surface-secondary/40 border border-border/80 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-text-secondary">
-            <div className="flex items-center gap-2.5">
-              <ShieldCheck className="w-5 h-5 text-success" />
-              <div>
-                <span className="font-semibold text-text">Cryptographically Anchored</span>
-                <p className="text-[11px] text-text-muted">Proofs are secured by Monad consensus and verifiable by any dApp or recruiter.</p>
-              </div>
-            </div>
-
-            <a
-              href={getExplorerUrl('address', address)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary-hover flex items-center gap-1.5 font-medium shrink-0"
-            >
-              <span>Verify on Monad Explorer</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
           </div>
         </div>
       </div>

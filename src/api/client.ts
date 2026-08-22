@@ -1,4 +1,4 @@
-import { ChallengeRequest, ChallengeResponse, EvaluateRequest, EvaluateResponse } from './types';
+import { ChallengeRequest, ChallengeResponse, EvaluateRequest, EvaluateResponse, UserProfile, NonceResponse, AuthVerifyResponse } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -330,5 +330,107 @@ export async function evaluateEvidence(request: EvaluateRequest): Promise<Evalua
         'Could include explicit NatSpec comments on internal calculation boundaries.',
       ],
     };
+  }
+}
+
+/**
+ * Auth Nonce via GET /api/auth/nonce
+ */
+export async function getAuthNonce(address: string): Promise<NonceResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/nonce?address=${encodeURIComponent(address)}`);
+    if (!response.ok) throw new Error(`Auth nonce returned ${response.status}`);
+    return await response.json();
+  } catch (err) {
+    console.warn('Backend nonce endpoint fallback:', err);
+    const nonce = Math.floor(100000 + Math.random() * 900000).toString();
+    return {
+      nonce,
+      message: `SkillPulse wants you to sign in\n\nSign this message to authenticate with SkillPulse.\nThis signature will NOT trigger a blockchain transaction or cost gas.\n\nWallet: ${address}\nNonce: ${nonce}\nIssued At: ${new Date().toISOString()}`
+    };
+  }
+}
+
+/**
+ * Verify Signature via POST /api/auth/verify
+ */
+export async function verifyAuthSignature(address: string, message: string, signature: string): Promise<AuthVerifyResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address, message, signature })
+    });
+    if (!response.ok) throw new Error(`Auth verify returned ${response.status}`);
+    return await response.json();
+  } catch (err) {
+    console.warn('Backend auth verify fallback:', err);
+    const localProfile = localStorage.getItem(`sp_profile_${address.toLowerCase()}`);
+    const parsed = localProfile ? JSON.parse(localProfile) : null;
+    return {
+      verified: true,
+      isNewUser: !parsed,
+      user: parsed || {
+        walletAddress: address,
+        name: '',
+        role: 'Developer',
+        primarySkill: 'Solidity',
+        createdAt: new Date().toISOString()
+      },
+      token: `sp_local_token_${Date.now()}`
+    };
+  }
+}
+
+/**
+ * Get Profile via GET /api/profile/:address
+ */
+export async function getUserProfile(address: string): Promise<UserProfile | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile/${encodeURIComponent(address)}`);
+    if (!response.ok) {
+      if (response.status === 404) return null;
+      throw new Error(`Profile query returned ${response.status}`);
+    }
+    return await response.json();
+  } catch (err) {
+    const cached = localStorage.getItem(`sp_profile_${address.toLowerCase()}`);
+    return cached ? JSON.parse(cached) : null;
+  }
+}
+
+/**
+ * Save Profile via POST /api/profile
+ */
+export async function saveUserProfile(profile: {
+  walletAddress: string;
+  name: string;
+  role: string;
+  primarySkill: string;
+  bio?: string;
+}): Promise<UserProfile> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile)
+    });
+    if (!response.ok) throw new Error(`Profile save returned ${response.status}`);
+    const data = await response.json();
+    localStorage.setItem(`sp_profile_${profile.walletAddress.toLowerCase()}`, JSON.stringify(data));
+    return data;
+  } catch (err) {
+    console.warn('Backend save profile fallback to local persistence:', err);
+    const localData: UserProfile = {
+      walletAddress: profile.walletAddress,
+      name: profile.name,
+      role: profile.role || 'Developer',
+      primarySkill: profile.primarySkill || 'Solidity',
+      bio: profile.bio || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem(`sp_profile_${profile.walletAddress.toLowerCase()}`, JSON.stringify(localData));
+    return localData;
   }
 }

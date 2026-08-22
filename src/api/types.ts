@@ -46,3 +46,25 @@ export interface SkillProofData {
   level?: string;
   confidence?: number;
 }
+
+export interface UserProfile {
+  walletAddress: string;
+  name: string;
+  role: string;
+  primarySkill: string;
+  bio?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface NonceResponse {
+  nonce: string;
+  message: string;
+}
+
+export interface AuthVerifyResponse {
+  verified: boolean;
+  isNewUser: boolean;
+  user: UserProfile;
+  token: string;
+}

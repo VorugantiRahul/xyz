@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { WalletButton } from '../wallet/WalletButton';
 import { useAccount } from 'wagmi';
-import { Activity, Shield, Code, User, Menu, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { Activity, Shield, Code, User, Menu, X, Sparkles } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const { address, isConnected } = useAccount();
+  const { user, isAuthenticated, setShowSignInModal, setShowProfileModal } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const passportUrl = isConnected && address ? `/passport/${address}` : '/passport/0x8849b2C12D554FEA21B898eE0fF27A419c81DE34';
@@ -65,8 +67,34 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Desktop Wallet Button */}
+          {/* Desktop Right Side: User Profile / Wallet */}
           <div className="hidden md:flex items-center gap-3">
+            {isConnected && !isAuthenticated && (
+              <button
+                onClick={() => setShowSignInModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary-light font-semibold text-xs transition-all shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Sign in with Wallet</span>
+              </button>
+            )}
+
+            {isConnected && isAuthenticated && user && (
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-secondary hover:bg-surface-secondary/80 border border-border text-xs text-text transition-all"
+                title="Edit Profile"
+              >
+                <div className="w-5 h-5 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary text-[10px] font-bold">
+                  {user.name ? user.name[0].toUpperCase() : 'U'}
+                </div>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="font-semibold text-text">{user.name || 'Anonymous'}</span>
+                  <span className="text-[10px] text-text-muted">{user.role}</span>
+                </div>
+              </button>
+            )}
+
             <WalletButton size="sm" />
           </div>
 
@@ -108,7 +136,19 @@ export const Navbar: React.FC = () => {
               );
             })}
           </nav>
-          <div className="pt-2 border-t border-border/60">
+          <div className="pt-2 border-t border-border/60 space-y-2">
+            {isConnected && !isAuthenticated && (
+              <button
+                onClick={() => {
+                  setShowSignInModal(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-text font-semibold text-sm shadow-glow-primary"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Sign in with Wallet</span>
+              </button>
+            )}
             <WalletButton size="md" className="w-full" />
           </div>
         </div>

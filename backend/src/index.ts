@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { challengeRouter } from './routes/challenge';
 import { evaluateRouter } from './routes/evaluate';
 import { healthRouter } from './routes/health';
+import { authRouter } from './routes/auth';
+import { profileRouter } from './routes/profile';
 import { logger } from './lib/logger';
 
 // Load environment variables
@@ -41,6 +43,8 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use('/api/challenge', challengeRouter);
 app.use('/api/evaluate', evaluateRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/profile', profileRouter);
 
 // Root Index
 app.get('/', (_req: Request, res: Response) => {
@@ -50,7 +54,10 @@ app.get('/', (_req: Request, res: Response) => {
     endpoints: {
       challenge: 'POST /api/challenge',
       evaluate: 'POST /api/evaluate',
-      health: 'GET /api/health'
+      health: 'GET /api/health',
+      authNonce: 'GET /api/auth/nonce',
+      authVerify: 'POST /api/auth/verify',
+      profile: 'GET /api/profile/:address, POST /api/profile'
     }
   });
 });

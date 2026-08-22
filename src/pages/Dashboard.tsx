@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -15,37 +16,79 @@ import {
   Activity,
   AlertTriangle,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  User,
+  Edit3,
+  KeyRound
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const { address, isConnected } = useAccount();
+  const { user, isAuthenticated, setShowSignInModal, setShowProfileModal } = useAuth();
   const { skills } = useSkillPassport(address);
 
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : '0x8849...DE34 (Demo Mode)';
 
+  const greetingName = user?.name ? user.name : 'Developer';
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+      {/* Sign-in Callout if connected but not authenticated */}
+      {isConnected && !isAuthenticated && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-primary/20 via-surface to-surface border border-primary/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0">
+              <KeyRound className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-text text-sm">Sign in to save your developer identity</h3>
+              <p className="text-xs text-text-secondary">
+                A simple zero-gas wallet signature proves you control this account and attaches your name & role.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowSignInModal(true)}
+            leftIcon={<Sparkles className="w-4 h-4" />}
+            className="shrink-0 shadow-glow-primary"
+          >
+            Sign in with Wallet
+          </Button>
+        </div>
+      )}
+
       {/* Wallet Status & Welcome Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 rounded-3xl bg-surface border border-border relative overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-full bg-primary/5 blur-3xl pointer-events-none" />
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2.5">
             <Badge variant="primary" size="sm">
               <span className="w-1.5 h-1.5 rounded-full bg-success inline-block mr-1" />
               Monad Testnet Connected
             </Badge>
             <span className="text-xs text-text-muted">Chain ID: 10143</span>
+            {user?.role && (
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-secondary border border-border text-primary-light">
+                {user.role}
+              </span>
+            )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
-            Candidate Dashboard
-          </h1>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-text tracking-tight">
+              Welcome back, <span className="text-gradient-purple">{greetingName}</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
+              {user?.bio || 'Manage and prove your living skill state on the Monad high-throughput blockchain.'}
+            </p>
+          </div>
 
-          <div className="flex items-center gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-3 pt-1">
             <div className="flex items-center gap-2 bg-surface-secondary px-3 py-1.5 rounded-xl border border-border text-xs">
               <Wallet className="w-3.5 h-3.5 text-primary" />
               <span className="font-mono text-text font-medium">{truncatedAddress}</span>
@@ -60,6 +103,16 @@ export const Dashboard: React.FC = () => {
                 </a>
               )}
             </div>
+
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="text-xs text-text-secondary hover:text-text flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-surface-secondary"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Profile</span>
+              </button>
+            )}
 
             <Link
               to={address ? `/passport/${address}` : '/passport/0x8849b2C12D554FEA21B898eE0fF27A419c81DE34'}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/Button';
 import { monadTestnet, getExplorerUrl } from '../../config/contracts';
-import { Wallet, LogOut, ChevronDown, ExternalLink, AlertTriangle, HelpCircle, X, Download } from 'lucide-react';
+import { Wallet, LogOut, ChevronDown, ExternalLink, AlertTriangle, HelpCircle, X, Download, Sparkles, UserCheck, Edit3 } from 'lucide-react';
 
 export interface WalletButtonProps {
   className?: string;
@@ -15,6 +16,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className, size = 'm
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { user, isAuthenticated, setShowSignInModal, setShowProfileModal, signOut } = useAuth();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showNoWalletModal, setShowNoWalletModal] = useState(false);
@@ -65,7 +67,6 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className, size = 'm
     }
 
     try {
-      // First ensure Monad Testnet is known to the wallet
       await addMonadTestnetToWallet();
 
       const connector = connectors[0];
@@ -119,7 +120,7 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className, size = 'm
         {/* Modal shown if no Web3 wallet extension is found */}
         {showNoWalletModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-            <div className="relative w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl space-y-5">
+            <div className="relative w-full max-w-md bg-surface border border-border rounded-3xl p-6 shadow-2xl space-y-5">
               <button
                 onClick={() => setShowNoWalletModal(false)}
                 className="absolute top-4 right-4 text-text-secondary hover:text-text p-1 rounded-lg hover:bg-surface-secondary transition-colors"
@@ -201,7 +202,9 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className, size = 'm
             <span className="hidden sm:inline">Monad</span>
           </div>
 
-          <span className="font-mono text-text">{formatAddress(address)}</span>
+          <span className="font-mono text-text">
+            {user?.name ? user.name : formatAddress(address)}
+          </span>
           <ChevronDown className="w-3.5 h-3.5 text-text-secondary" />
         </button>
       </div>
@@ -212,13 +215,50 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className, size = 'm
             className="fixed inset-0 z-40"
             onClick={() => setIsDropdownOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-surface border border-border shadow-2xl p-3 z-50 animate-fade-in">
-            <div className="px-3 py-2 border-b border-border/70 mb-2">
-              <p className="text-[11px] text-text-secondary uppercase tracking-wider font-semibold">Connected Account</p>
-              <p className="font-mono text-xs text-text break-all mt-1">{address}</p>
+          <div className="absolute right-0 mt-2 w-72 rounded-3xl bg-surface border border-border shadow-2xl p-4 z-50 animate-fade-in space-y-3">
+            <div className="px-1 py-1 border-b border-border/70 pb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-text-secondary uppercase tracking-wider font-semibold">Account</span>
+                {isAuthenticated ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-success font-semibold px-2 py-0.5 rounded-full bg-success-surface border border-success/30">
+                    <UserCheck className="w-3 h-3" /> Signed In
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-warning font-semibold px-2 py-0.5 rounded-full bg-warning-surface border border-warning/30">
+                    Wallet Only
+                  </span>
+                )}
+              </div>
+              {user?.name && <p className="text-sm font-bold text-text mt-1">{user.name}</p>}
+              <p className="font-mono text-xs text-text-secondary break-all mt-0.5">{address}</p>
+              {user?.role && <p className="text-xs text-primary font-medium mt-1">{user.role}</p>}
             </div>
 
             <div className="space-y-1">
+              {!isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    setShowSignInModal(true);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors text-left"
+                >
+                  <span>Sign in with Wallet</span>
+                  <Sparkles className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setShowProfileModal(true);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-text-secondary hover:text-text hover:bg-surface-secondary transition-colors text-left"
+                >
+                  <span>Edit Profile</span>
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+              )}
+
               <a
                 href={address ? getExplorerUrl('address', address) : '#'}
                 target="_blank"
@@ -231,12 +271,13 @@ export const WalletButton: React.FC<WalletButtonProps> = ({ className, size = 'm
 
               <button
                 onClick={() => {
+                  signOut();
                   disconnect();
                   setIsDropdownOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-danger hover:bg-danger-surface transition-colors text-left"
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-danger hover:bg-danger-surface transition-colors text-left font-medium"
               >
-                <span>Disconnect</span>
+                <span>Disconnect Wallet</span>
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>

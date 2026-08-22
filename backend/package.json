@@ -9,13 +9,20 @@
     "start": "node dist/index.js",
     "test": "ts-node src/test/api.test.ts"
   },
-  "keywords": ["skillpulse", "monad", "ai", "skills", "verification"],
+  "keywords": [
+    "skillpulse",
+    "monad",
+    "ai",
+    "skills",
+    "verification"
+  ],
   "author": "SkillPulse Team (Developer 3)",
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "viem": "^2.55.19",
     "zod": "^3.24.2"
   },
   "devDependencies": {
