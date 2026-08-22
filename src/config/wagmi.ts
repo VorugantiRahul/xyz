@@ -6,7 +6,7 @@ export const wagmiConfig = createConfig({
   chains: [monadTestnet],
   connectors: [
     injected({
-      target: 'metaMask',
+      shimDisconnect: true,
     }),
   ],
   transports: {
