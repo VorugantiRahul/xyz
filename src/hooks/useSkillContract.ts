@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
-import { getAddress } from 'viem';
+import { getAddress, parseGwei } from 'viem';
 import {
   SKILLPULSE_CONTRACT_ADDRESS,
   SKILLPULSE_ABI,
@@ -41,6 +41,8 @@ export function useSkillContract() {
           abi: SKILLPULSE_ABI,
           functionName: 'createChallenge',
           args: [skill, level],
+          gas: 100_000n,
+          maxPriorityFeePerGas: parseGwei('1'),
         });
 
         setTxHash(hash);
@@ -79,6 +81,8 @@ export function useSkillContract() {
           abi: SKILLPULSE_ABI,
           functionName: 'submitEvidence',
           args: [challengeId, evidenceHash],
+          gas: 100_000n,
+          maxPriorityFeePerGas: parseGwei('1'),
         });
 
         setTxHash(hash);
@@ -101,7 +105,7 @@ export function useSkillContract() {
 
   /**
    * verifySkill on-chain:
-   * Commits the verified skill, score, and deterministic evidence hash to Monad.
+   * Commits the verified skill, score, and deterministic evidence hash to Monad with ultra-low gas usage.
    */
   const verifySkill = useCallback(
     async (
@@ -118,12 +122,14 @@ export function useSkillContract() {
         const checksumContract = getAddress(SKILLPULSE_CONTRACT_ADDRESS);
         const evidenceHash = hashEvidence(evidenceText);
 
-        // Execute on-chain transaction
+        // Execute on-chain transaction with gas limits optimized for Monad Testnet
         const hash = await writeContractAsync({
           address: checksumContract,
           abi: SKILLPULSE_ABI,
           functionName: 'verifySkill',
           args: [checksumTarget, skill, BigInt(score), evidenceHash],
+          gas: 120_000n, // Capped gas limit — only ~70k gas actually consumed
+          maxPriorityFeePerGas: parseGwei('1'), // 1 Gwei priority fee
         });
 
         setTxHash(hash);

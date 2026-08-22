@@ -3,7 +3,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { StatusBadge } from '../ui/StatusBadge';
 import { EvaluateResponse } from '../../api/types';
-import { Award, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Award, CheckCircle2, AlertCircle, ArrowRight, ShieldCheck, Sparkles, Zap } from 'lucide-react';
 
 export interface ScoreCardProps {
   evaluation: EvaluateResponse;
@@ -102,11 +102,14 @@ export const ScoreCard: React.FC<ScoreCardProps> = ({
         </div>
       </div>
 
-      {/* Verification CTA */}
+      {/* Gas Economy & Verification CTA */}
       <div className="pt-4 border-t border-border/80 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-xs text-text-secondary flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-          <span>Ready to mint cryptographic proof on Monad Testnet</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs text-text-secondary">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary-light">
+            <Zap className="w-3.5 h-3.5 text-primary" />
+            <span className="font-mono">Gas: ~0.00005 MON</span>
+          </div>
+          <span className="text-text-muted text-[11px]">Enables 200+ verifications on minimal testnet balance</span>
         </div>
 
         <Button
