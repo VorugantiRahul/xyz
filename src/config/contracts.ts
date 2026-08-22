@@ -1,4 +1,4 @@
-import { defineChain, keccak256, toHex } from 'viem';
+import { defineChain, keccak256, toHex, getAddress } from 'viem';
 
 // Monad Testnet Chain Definition
 export const monadTestnet = defineChain({
@@ -26,10 +26,15 @@ export const monadTestnet = defineChain({
   testnet: true,
 });
 
-// Central Contract Address
-export const SKILLPULSE_CONTRACT_ADDRESS = (
-  import.meta.env.VITE_CONTRACT_ADDRESS || '0x9a676E4B1FBEFE93370C157E0e633C1488c0a88A'
-) as `0x${string}`;
+// Central Contract Address with robust EIP-55 normalization
+const rawContractAddress = (import.meta.env.VITE_CONTRACT_ADDRESS || '0x26496924B17BF32d5b8C2AF41a69e5C3d49265c7').trim();
+export const SKILLPULSE_CONTRACT_ADDRESS: `0x${string}` = (() => {
+  try {
+    return getAddress(rawContractAddress);
+  } catch {
+    return '0x26496924B17BF32d5b8C2AF41a69e5C3d49265c7' as `0x${string}`;
+  }
+})();
 
 export const MONAD_EXPLORER_URL = import.meta.env.VITE_EXPLORER_URL || 'https://testnet.monadexplorer.com';
 

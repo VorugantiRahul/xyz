@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
+import { getAddress } from 'viem';
 import {
   SKILLPULSE_CONTRACT_ADDRESS,
   SKILLPULSE_ABI,
@@ -33,8 +34,10 @@ export function useSkillContract() {
         setTxState('waiting');
         setTxError(undefined);
 
+        const checksumContract = getAddress(SKILLPULSE_CONTRACT_ADDRESS);
+
         const hash = await writeContractAsync({
-          address: SKILLPULSE_CONTRACT_ADDRESS,
+          address: checksumContract,
           abi: SKILLPULSE_ABI,
           functionName: 'createChallenge',
           args: [skill, level],
@@ -68,10 +71,11 @@ export function useSkillContract() {
         setTxState('waiting');
         setTxError(undefined);
 
+        const checksumContract = getAddress(SKILLPULSE_CONTRACT_ADDRESS);
         const evidenceHash = hashEvidence(evidenceText);
 
         const hash = await writeContractAsync({
-          address: SKILLPULSE_CONTRACT_ADDRESS,
+          address: checksumContract,
           abi: SKILLPULSE_ABI,
           functionName: 'submitEvidence',
           args: [challengeId, evidenceHash],
@@ -110,14 +114,16 @@ export function useSkillContract() {
         setTxState('waiting');
         setTxError(undefined);
 
+        const checksumTarget = getAddress(targetUser);
+        const checksumContract = getAddress(SKILLPULSE_CONTRACT_ADDRESS);
         const evidenceHash = hashEvidence(evidenceText);
 
         // Execute on-chain transaction
         const hash = await writeContractAsync({
-          address: SKILLPULSE_CONTRACT_ADDRESS,
+          address: checksumContract,
           abi: SKILLPULSE_ABI,
           functionName: 'verifySkill',
-          args: [targetUser, skill, BigInt(score), evidenceHash],
+          args: [checksumTarget, skill, BigInt(score), evidenceHash],
         });
 
         setTxHash(hash);
@@ -151,11 +157,14 @@ export function useSkillContract() {
     async (user: `0x${string}`, skill: string) => {
       if (!publicClient) return null;
       try {
+        const checksumUser = getAddress(user);
+        const checksumContract = getAddress(SKILLPULSE_CONTRACT_ADDRESS);
+
         const proof = await publicClient.readContract({
-          address: SKILLPULSE_CONTRACT_ADDRESS,
+          address: checksumContract,
           abi: SKILLPULSE_ABI,
           functionName: 'getSkillProof',
-          args: [user, skill],
+          args: [checksumUser, skill],
         });
         return proof;
       } catch (err) {
