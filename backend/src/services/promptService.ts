@@ -26,7 +26,9 @@ DO NOT include any markdown code blocks, preamble, commentary, or text outside t
 
     const userPrompt = `Generate a realistic ${level}-level practical challenge for the skill: "${skill}".
 
-Guidelines:
+Guidelines & Strict Constraints:
+- DO NOT INCLUDE THE SOLUTION CODE OR COMPLETED CONTRACTS IN THE DESCRIPTION.
+- The challenge description must only provide the scenario, problem statement, requirements, expected function signatures (empty interface stubs), and constraints.
 - If the skill is "Solidity" or Web3 smart contracts, focus on modern EVM best practices, security patterns (Checks-Effects-Interactions, reentrancy guards, custom errors, gas optimization, safe token transfers, or Monad high-throughput parallel execution considerations).
 - Ensure the candidate can solve it by writing code, architectural logic, or a concise smart contract.
 - Provide 3 to 5 clear, objective evaluation criteria.
