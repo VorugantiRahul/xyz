@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAccount } from 'wagmi';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -16,11 +17,13 @@ import {
   Cpu,
   Layers,
   Sparkles,
-  Lock
+  Lock,
+  UserCheck
 } from 'lucide-react';
 
 export const Landing: React.FC = () => {
   const { isConnected, address } = useAccount();
+  const { user, isAuthenticated, setShowSignInModal } = useAuth();
 
   const passportTarget = isConnected && address
     ? `/passport/${address}`
@@ -50,7 +53,7 @@ export const Landing: React.FC = () => {
         </h1>
 
         <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed mb-10 font-normal">
-          Continuously prove your skills through practical challenges and verifiable on-chain records.
+          Continuously prove your developer skills through practical AI challenges and verifiable on-chain records on Monad.
         </p>
 
         {/* Hero Actions */}
@@ -76,41 +79,44 @@ export const Landing: React.FC = () => {
           </Link>
         </div>
 
-        {/* Live Interactive Verification Preview */}
+        {/* Protocol Overview Cards */}
         <div className="mt-16 sm:mt-20 max-w-3xl mx-auto">
-          <Card variant="glass" className="p-6 sm:p-8 text-left border-border/80 relative overflow-hidden shadow-2xl">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-border/70 pb-4">
+          <Card variant="glass" className="p-6 sm:p-8 text-left border-border/80 relative overflow-hidden shadow-2xl space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/70 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-surface-secondary border border-border flex items-center justify-center text-primary">
                   <Cpu className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-text text-sm sm:text-base">Solidity Smart Contract Engineering</h3>
-                  <p className="text-xs text-text-secondary">Monad Testnet Attestation</p>
+                  <h3 className="font-bold text-text text-sm sm:text-base">SkillPulse Protocol Standard</h3>
+                  <p className="text-xs text-text-secondary">Zero-Gas Login • AI Evaluation • Monad On-Chain Proofs</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <StatusBadge status="ACTIVE" size="sm" />
-                <span className="font-mono text-xs text-text-muted">#10143</span>
+                <Badge variant="primary" size="sm">
+                  Monad #10143
+                </Badge>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-3.5 rounded-xl bg-surface-secondary/70 border border-border">
-                <span className="text-[11px] text-text-muted uppercase font-mono block">Attested Score</span>
-                <span className="text-2xl font-bold font-mono text-text text-gradient-purple">91/100</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center sm:text-left">
+              <div className="p-4 rounded-xl bg-surface-secondary/70 border border-border space-y-1">
+                <span className="text-[11px] text-text-muted uppercase font-mono block">1. Register Track</span>
+                <p className="text-sm font-semibold text-text">Choose Your Skill</p>
+                <p className="text-xs text-text-secondary">Solidity, Python, or React</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-surface-secondary/70 border border-border">
-                <span className="text-[11px] text-text-muted uppercase font-mono block">Freshness State</span>
-                <span className="text-xs font-semibold text-success block mt-1">94% Active</span>
-                <ProgressBar value={94} size="sm" variant="success" className="mt-1" />
+              <div className="p-4 rounded-xl bg-surface-secondary/70 border border-border space-y-1">
+                <span className="text-[11px] text-text-muted uppercase font-mono block">2. Complete Challenge</span>
+                <p className="text-sm font-semibold text-text">AI Evaluation</p>
+                <p className="text-xs text-text-secondary">Security & gas optimization</p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-surface-secondary/70 border border-border">
-                <span className="text-[11px] text-text-muted uppercase font-mono block">Cryptographic Proof</span>
-                <span className="text-xs font-mono text-text-secondary truncate block mt-1">0x3a88...031a</span>
+              <div className="p-4 rounded-xl bg-surface-secondary/70 border border-border space-y-1">
+                <span className="text-[11px] text-text-muted uppercase font-mono block">3. On-Chain Mint</span>
+                <p className="text-sm font-semibold text-text">Living Proof</p>
+                <p className="text-xs text-text-secondary">Dynamic freshness decay</p>
               </div>
             </div>
           </Card>
@@ -139,88 +145,45 @@ export const Landing: React.FC = () => {
                 <div className="w-12 h-12 rounded-2xl bg-surface-secondary border border-border group-hover:border-primary/40 flex items-center justify-center text-primary transition-colors shadow-inner-light">
                   <Code className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-mono text-text-muted font-bold">STEP 01</span>
+                <span className="font-mono text-xs font-bold text-text-muted">01 / TEST</span>
               </div>
-
-              <h3 className="text-xl font-bold text-text mb-2">1. Challenge</h3>
-              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                Generate practical, real-world coding problems synthesized by AI to evaluate production competence.
+              <h3 className="text-xl font-bold text-text mb-2">Practical Challenges</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                No multiple choice. Solve real-world smart contracts, vault architectures, and system modules evaluated by AI rubrics.
               </p>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-border/60 flex items-center gap-2 text-xs text-primary-light font-medium">
-              <span>Interactive Rubrics</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-auto" />
             </div>
           </Card>
 
-          {/* Step 2: Prove */}
+          {/* Step 2: On-Chain Proof */}
           <Card variant="glass" className="p-8 relative flex flex-col justify-between group hover:border-primary/50 transition-all">
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-surface-secondary border border-border group-hover:border-primary/40 flex items-center justify-center text-primary transition-colors shadow-inner-light">
-                  <Sparkles className="w-6 h-6" />
+                  <Zap className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-mono text-text-muted font-bold">STEP 02</span>
+                <span className="font-mono text-xs font-bold text-text-muted">02 / MINT</span>
               </div>
-
-              <h3 className="text-xl font-bold text-text mb-2">2. Prove</h3>
-              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                Submit your solution. Multi-dimensional AI evaluation grades code safety, structure, and gas efficiency.
+              <h3 className="text-xl font-bold text-text mb-2">Monad Attestations</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Verification scores, block timestamps, and deterministic submission hashes are written immutably to Monad Testnet.
               </p>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-border/60 flex items-center gap-2 text-xs text-primary-light font-medium">
-              <span>Deterministic Hashing</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-auto" />
             </div>
           </Card>
 
-          {/* Step 3: Stay Verified */}
+          {/* Step 3: Freshness Decay */}
           <Card variant="glass" className="p-8 relative flex flex-col justify-between group hover:border-primary/50 transition-all">
             <div>
               <div className="flex items-center justify-between mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-surface-secondary border border-border group-hover:border-primary/40 flex items-center justify-center text-primary transition-colors shadow-inner-light">
-                  <ShieldCheck className="w-6 h-6" />
+                  <RefreshCw className="w-6 h-6" />
                 </div>
-                <span className="text-xs font-mono text-text-muted font-bold">STEP 03</span>
+                <span className="font-mono text-xs font-bold text-text-muted">03 / DECAY</span>
               </div>
-
-              <h3 className="text-xl font-bold text-text mb-2">3. Stay Verified</h3>
-              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-                Record your verified score to Monad Testnet. Proofs decay over time unless renewed by new challenges.
+              <h3 className="text-xl font-bold text-text mb-2">Freshness Lifecycle</h3>
+              <p className="text-sm text-text-secondary leading-relaxed">
+                Skills age over time. Proofs remain <span className="text-success font-semibold">Active</span>, become <span className="text-warning font-semibold">Aging</span>, and eventually <span className="text-danger font-semibold">Stale</span> until refreshed.
               </p>
             </div>
-
-            <div className="mt-6 pt-4 border-t border-border/60 flex items-center gap-2 text-xs text-success font-medium">
-              <span>Immutable Attestation</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-auto" />
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Feature Highlights Grid */}
-      <section className="max-w-6xl mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card variant="surface" className="p-8 border-border">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4">
-              <Lock className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-bold text-text mb-2">On-Chain Evidence Hashing</h3>
-            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-              Submissions are deterministically hashed via Keccak-256 before blockchain transmission, ensuring cryptographic integrity without on-chain storage bloat.
-            </p>
-          </Card>
-
-          <Card variant="surface" className="p-8 border-border">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4">
-              <RefreshCw className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-bold text-text mb-2">Decay-Aware Freshness Meters</h3>
-            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
-              Static certificates expire in value without anyone noticing. SkillPulse introduces dynamic decay states (Active, Aging, Stale) reflecting real-world currency.
-            </p>
           </Card>
         </div>
       </section>
