@@ -19,7 +19,9 @@ import {
   Sparkles,
   User,
   Edit3,
-  KeyRound
+  KeyRound,
+  Award,
+  BookOpen
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -29,7 +31,7 @@ export const Dashboard: React.FC = () => {
 
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
-    : '0x8849...DE34 (Demo Mode)';
+    : 'Wallet not connected';
 
   const greetingName = user?.name ? user.name : 'Developer';
 
@@ -43,9 +45,9 @@ export const Dashboard: React.FC = () => {
               <KeyRound className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-text text-sm">Sign in to save your developer identity</h3>
+              <h3 className="font-bold text-text text-sm">Register your developer identity</h3>
               <p className="text-xs text-text-secondary">
-                A simple zero-gas wallet signature proves you control this account and attaches your name & role.
+                A simple zero-gas wallet signature attaches your Name & Role to your verified on-chain proofs.
               </p>
             </div>
           </div>
@@ -163,16 +165,44 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Grid of Skill Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {skills.map((skill) => (
-            <SkillCard
-              key={skill.skill}
-              skill={skill}
-              isRealBlockchain={skill.skill === 'Solidity'}
-            />
-          ))}
-        </div>
+        {/* Dynamic Skills Display: Empty State vs Grid */}
+        {skills.length === 0 ? (
+          <Card variant="surface" className="p-8 sm:p-12 text-center border-border space-y-5">
+            <div className="w-16 h-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto shadow-glow-primary">
+              <Award className="w-8 h-8" />
+            </div>
+
+            <div className="max-w-md mx-auto space-y-1.5">
+              <h3 className="text-lg sm:text-xl font-bold text-text">No Verified Skills Yet</h3>
+              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                You haven't completed any skill challenges on Monad Testnet yet. Complete your first challenge to generate a permanent on-chain cryptographic proof.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <Link to="/challenge?skill=Solidity">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  leftIcon={<Sparkles className="w-4 h-4" />}
+                  className="shadow-glow-primary"
+                >
+                  Start Your First Challenge (Solidity)
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {skills.map((skill) => (
+              <SkillCard
+                key={skill.skill}
+                skill={skill}
+                isRealBlockchain={skill.skill === 'Solidity'}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Verification Protocol Explainer Banner */}

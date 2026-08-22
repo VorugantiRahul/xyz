@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SkillProofData } from '../api/types';
 
-const INITIAL_SKILLS: SkillProofData[] = [
+// Sample skills only for explicit demo exploration route
+export const DEMO_SAMPLE_SKILLS: SkillProofData[] = [
   {
     skill: 'Solidity',
     score: 91,
@@ -37,10 +38,15 @@ const INITIAL_SKILLS: SkillProofData[] = [
   },
 ];
 
-export function useSkillPassport(address?: string) {
-  const storageKey = `skillpulse_passport_${address?.toLowerCase() || 'default'}`;
+const DEMO_ADDRESS = '0x8849b2c12d554fea21b898ee0ff27a419c81de34';
 
-  const [skills, setSkills] = useState<SkillProofData[]>(() => {
+export function useSkillPassport(address?: string) {
+  const normalized = address?.toLowerCase();
+  const isDemoAddress = normalized === DEMO_ADDRESS;
+  const storageKey = `skillpulse_passport_${normalized || 'default'}`;
+
+  const loadInitialSkills = (): SkillProofData[] => {
+    if (!address) return [];
     try {
       const cached = localStorage.getItem(storageKey);
       if (cached) {
@@ -49,25 +55,15 @@ export function useSkillPassport(address?: string) {
     } catch (e) {
       console.warn('Failed to load local cached skills:', e);
     }
-    return INITIAL_SKILLS;
-  });
+    // Only return demo sample skills if browsing the demo address
+    return isDemoAddress ? DEMO_SAMPLE_SKILLS : [];
+  };
+
+  const [skills, setSkills] = useState<SkillProofData[]>(loadInitialSkills);
 
   // Re-load when address changes
   useEffect(() => {
-    if (!address) {
-      setSkills(INITIAL_SKILLS);
-      return;
-    }
-    try {
-      const cached = localStorage.getItem(storageKey);
-      if (cached) {
-        setSkills(JSON.parse(cached));
-      } else {
-        setSkills(INITIAL_SKILLS);
-      }
-    } catch (e) {
-      setSkills(INITIAL_SKILLS);
-    }
+    setSkills(loadInitialSkills());
   }, [address, storageKey]);
 
   /**
@@ -102,15 +98,17 @@ export function useSkillPassport(address?: string) {
         }
 
         try {
-          localStorage.setItem(storageKey, JSON.stringify(updated));
+          if (address) {
+            localStorage.setItem(storageKey, JSON.stringify(updated));
+          }
         } catch (e) {
-          console.warn('Failed to cache updated skill proof:', e);
+          console.warn('Failed to persist skills:', e);
         }
 
         return updated;
       });
     },
-    [storageKey]
+    [address, storageKey]
   );
 
   return {
