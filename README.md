@@ -115,3 +115,9 @@ supabase/       Database migrations
 - Transcription, SRT import, color grading, stabilization, chroma key, and generative audio are not available through the current editing engine.
 - Large media files can be slow to process in a browser; compressed H.264 MP4 is recommended for smoother editing.
 - MP4 export depends on browser support for the required WebCodecs APIs.
+
+## Contributors
+
+- [Yashwanthkumar-68](https://github.com/Yashwanthkumar-68)
+- [yashwanth-p219](https://github.com/yashwanth-p219)
+- [nagachaitanyaracharla](https://github.com/nagachaitanyaracharla)
