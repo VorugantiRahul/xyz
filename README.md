@@ -1,254 +1,117 @@
 # Elah Studio AI
 
-**A professional, AI-powered browser-based video editing platform built on the Elah engine.**
+Elah Studio AI is a browser-based video editor built on the Elah frame-accurate editing engine. It combines a multitrack timeline and WebGL preview with an assistant that turns natural-language requests into reviewable editing plans.
 
-Upload video → Describe an edit → AI generates a structured plan → Preview → Accept → Timeline updates → Undo in one step.
+AI-generated edits are validated and previewed before they are applied. Accepted operations are grouped into a single undoable timeline change. When no OpenAI API key is configured, the editor can use its built-in local planner.
 
----
+## Capabilities
 
-## The Problem
+- Import media into a library and add clips to a multitrack timeline.
+- Preview, play, seek, trim, split, move, and delete clips.
+- Add text overlays and transitions, adjust clip speed, and change the project aspect ratio.
+- Export video to MP4 in supported browsers.
+- Request edits conversationally, review the proposed operations, and accept, reject, or refine the plan.
+- Save project data locally in the browser.
+- Use optional Supabase services and database schema for project and AI-edit persistence.
 
-Professional video editing requires expensive desktop software, steep learning curves, and hours of manual work. Non-technical creators can't easily express editing intent without learning complex tooling.
+## AI Editing
 
-## The Solution
+The assistant accepts a natural-language request and produces a structured plan based on the current project context. The plan is checked against the project before it is shown for review. No timeline changes are made until the user accepts the plan; an accepted plan is applied as one undoable action.
 
-**Elah Studio AI** combines Elah's frame-accurate WebGL2 video engine with a conversational AI assistant that:
+With `OPENAI_API_KEY` configured, requests are handled by the server-side AI route. Without it, the local planner provides supported editing operations without requiring an external API.
 
-1. Accepts natural-language editing requests
-2. Converts them into a **structured, validated editing plan**
-3. Shows the plan visually (affected clips, operations, expected result) **before touching the timeline**
-4. Applies only operations the engine actually supports
-5. Wraps everything in a **single undo entry**
+## Technology
 
----
+| Area | Stack |
+| --- | --- |
+| Editing engine | `@elah/core`, WebGL2, WebCodecs |
+| Timeline and React bindings | `@elah/timeline`, `@elah/react`, `@elah/editor` |
+| Web application | Next.js 16, React 19, Tailwind CSS |
+| AI | OpenAI API with a local planner fallback |
+| Optional persistence | Supabase, PostgreSQL, row-level security |
+| Browser storage | IndexedDB and local project storage |
 
-## Key Features
+## Requirements
 
-### ✅ Implemented
+- Node.js and npm
+- A modern browser with WebGL2 support
+- An OpenAI API key only if you want to use the hosted AI planner
 
-| Feature | Status |
-|---------|--------|
-| Professional 5-zone editor layout | ✅ Complete |
-| Media library — upload, preview, insert to timeline | ✅ Complete |
-| Multitrack timeline with ruler, playhead, zoom | ✅ Complete |
-| Clip drag, trim, split, nudge | ✅ Complete (via `@elah/timeline` ClipBlock) |
-| Play/pause/seek with WebGL2 preview | ✅ Complete |
-| AI conversational assistant (chat thread) | ✅ Complete |
-| Multi-turn conversation context | ✅ Complete |
-| Structured editing plan (JSON schema) | ✅ Complete |
-| Visual "Intent-to-Edit Timeline" plan card | ✅ Complete |
-| Plan validation before execution | ✅ Complete |
-| Accept / Reject / Refine workflow | ✅ Complete |
-| One-step undo for each AI plan | ✅ Complete |
-| Local fallback planner (no API key needed) | ✅ Complete |
-| Graceful unsupported-request handling | ✅ Complete |
-| OpenAI GPT-4o-mini integration (server-side) | ✅ Complete |
-| Add text / subtitle overlays | ✅ Complete |
-| Trim, split, delete, move clips | ✅ Complete |
-| Add transitions (fade, slide, wipe) | ✅ Complete |
-| Set clip speed | ✅ Complete |
-| Change aspect ratio (16:9, 9:16, 1:1) | ✅ Complete |
-| Export MP4 | ✅ Complete (via `@elah/editor` lazyExportVideo) |
-| Project autosave to localStorage | ✅ Complete |
-| Supabase schema (SQL migration) | ✅ Ready (apply manually) |
-| Supabase client/server helpers | ✅ Complete |
-| Resizable panels (left, right, timeline) | ✅ Complete |
-| Keyboard shortcuts (Space, Ctrl+Z, etc.) | ✅ Via Elah engine |
-
-### ⚠️ Partially Implemented
-
-| Feature | Notes |
-|---------|-------|
-| Supabase auth UI | Schema ready; login UI is a future stage |
-| Cloud project save | Service layer built; needs auth UI |
-| AI edit history persistence | `recordAiEdit()` built; requires Supabase credentials |
-| Mute clip | `mute_clip` action planned; `engine.muteClip()` not yet in `@elah/core` |
-
-### ❌ Not Implemented (Elah engine limitation)
-
-| Feature | Reason |
-|---------|--------|
-| Auto-transcription / speech-to-text | No engine API |
-| SRT subtitle import | No engine API |
-| Color grading / LUTs | No engine API |
-| Video stabilisation | No engine API |
-| Background removal / chroma key | No engine API |
-| AI music generation | No engine API; use Media Library upload instead |
-| Pixabay / Pexels / Freesound search | Optional — keys not configured |
-
----
-
-## Architecture
-
-```
-elah/ (monorepo)
-├── packages/
-│   ├── core/          @elah/core — TimelineEngine, PlaybackEngine, stores
-│   ├── react/         @elah/react — React hooks
-│   ├── timeline/      @elah/timeline — <Timeline>, <ClipBlock>, <Ruler>
-│   └── editor/        @elah/editor — barrel re-export + media APIs
-└── apps/
-    └── web/           Next.js 16 application
-        ├── app/
-        │   └── api/
-        │       └── ai/edit-plan/   POST — OpenAI GPT-4o-mini server route
-        ├── components/playground/production/
-        │   ├── ProductionEditor.tsx        5-zone layout shell
-        │   ├── ai/AiAssistantPanel.tsx     Conversational AI panel
-        │   ├── panels/MediaLibraryPanel.tsx
-        │   └── panels/ …                  Other sidebar panels
-        └── lib/
-            ├── ai/studioTypes.ts   Schema types
-            ├── ai/studioPlanner.ts Local planner + validateEditPlan + applyStudioEditPlan
-            └── supabase/           Supabase client, server, project service
-```
-
-### AI Workflow
-
-```
-User types request
-       ↓
-POST /api/ai/edit-plan
-  { prompt, context (track/clip IDs, fps, frame), history (last 10 turns) }
-       ↓
-OpenAI GPT-4o-mini (with context-aware system prompt)
-  → returns StudioEditPlan JSON (validated against schema)
-       ↓
-  [on failure / no key → local deterministic planner]
-       ↓
-validateEditPlan() — checks clip IDs, track IDs, frame bounds
-       ↓
-Show visual "Intent-to-Edit Timeline" card to user
-       ↓
-User: Accept / Reject / Refine
-       ↓
-[Accept] → applyStudioEditPlan() via engine.batch()
-         → single undo entry
-         → recordAiEdit() to Supabase (if configured)
-```
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Video engine | `@elah/core` (WebGL2, frame-accurate) |
-| React bindings | `@elah/react`, `@elah/timeline`, `@elah/editor` |
-| UI framework | Next.js 16, React 19, Tailwind CSS |
-| AI | OpenAI GPT-4o-mini (server-side) + local fallback planner |
-| Database | Supabase (PostgreSQL + RLS) |
-| Auth | Supabase Auth |
-| Storage | Browser IndexedDB (media blobs) + Supabase Storage (optional) |
-| State | Zustand (via `@elah/react` stores) |
-
----
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OPENAI_API_KEY` | No | GPT-4o-mini for live AI. Falls back to local planner. |
-| `OPENAI_MODEL` | No | Override model (default: `gpt-4o-mini`) |
-| `NEXT_PUBLIC_SUPABASE_URL` | No | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | No | Supabase anon key (safe for browser) |
-| `SUPABASE_SERVICE_ROLE_KEY` | No | Server-only service role (never expose) |
-| `PIXABAY_API_KEY` | No | Optional stock footage search |
-| `PEXEL_API_KEY` | No | Optional stock photos |
-| `FREESOUND_API_KEY` | No | Optional audio samples |
-
----
-
-## Supabase Setup
-
-1. Create a free project at [supabase.com](https://supabase.com/dashboard)
-2. Go to **SQL Editor** → **New Query**
-3. Paste and run `supabase/migrations/001_initial_schema.sql`
-4. Go to **Project Settings → API** and copy your URL and anon key
-5. Add them to `apps/web/.env.local`
-
----
-
-## How to Run Locally
+## Quick Start
 
 ```bash
-# Clone and install
-git clone <repo-url>
-cd elah
+git clone https://github.com/VorugantiRahul/xyz.git
+cd xyz
 npm install
-
-# Build packages first (required once)
-npm run build:web-packages
-
-# Configure environment
-cp .env.example apps/web/.env.local
-# Edit apps/web/.env.local and add your OPENAI_API_KEY
-
-# Start dev server
-npm run dev --workspace=apps/web
-# → http://localhost:3001/editor
 ```
 
-### Run Tests
+Copy `.env.example` to `apps/web/.env.local` and add configuration as needed. The editor can run without any API keys; add `OPENAI_API_KEY` to enable the hosted AI planner.
 
 ```bash
-# All @elah/timeline tests (75 tests)
-npm run test --workspace=packages/timeline
-
-# Core tests (44 tests)
-npx vitest run packages/core/src/visitor/split.test.ts packages/core/src/assets/importFiles.test.ts
-
-# TypeScript check
-npm run typecheck --workspace=apps/web
+npm run dev --workspace=apps/web
 ```
 
----
+Open [http://localhost:3001/editor](http://localhost:3001/editor).
 
-## Known Limitations
+The development app resolves the Elah packages directly from source, so no separate package build is needed to start the dev server. The web production build runs the package build step automatically.
 
-- **OpenAI account needs credits.** The local planner handles all common operations offline. Live GPT-4o-mini adds conversation context awareness.
-- **No video stabilisation, color grading, or speech-to-text** — the Elah engine does not expose these APIs.
-- **Large video files (>500 MB)** may be slow to import in the browser. Use compressed H.264 MP4.
-- **Supabase auth UI** is not yet implemented. The schema is ready; cloud save works once credentials are added.
-- **Export** requires a modern browser with `VideoEncoder` support (Chrome 94+, Edge 94+).
+## Configuration
 
----
+All values are optional. Configure only the services you plan to use.
 
-## Demo Instructions
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Enables the hosted AI planner. Keep this server-side. |
+| `OPENAI_MODEL` | Overrides the AI model; defaults to `gpt-4o-mini`. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase publishable/anonymous key. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase administration. Never expose this to the browser. |
+| `PIXABAY_API_KEY` | Optional Pixabay media search. |
+| `PEXEL_API_KEY` | Optional Pexels media search. |
+| `FREESOUND_API_KEY` | Optional Freesound audio search. |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | Optional PostHog analytics. |
 
-### 30-Second Demo Script
+### Supabase
 
-1. **Open** http://localhost:3001/editor
-2. **Upload video** — click Media tab → drag an MP4 or click Upload
-3. **Insert to timeline** — click the clip thumbnail in the Media Library
-4. **Watch timeline** — the clip appears on the video track with accurate duration
-5. **Open AI Assistant** — right sidebar (Sparkles tab)
-6. **Type a request:**
-   > "Make this a 30-second Instagram reel with a title at the beginning and a fade transition"
-7. **AI generates plan** — see the visual "Intent-to-Edit Timeline" with numbered operations
-8. **Click Apply** — operations execute atomically
-9. **Type a refinement:**
-   > "Use a slide transition instead"
-10. **Accept the updated plan**
-11. **Undo** — press Ctrl+Z or click Undo in the AI panel header — entire AI action reverts
-12. **Unsupported request:**
-    > "Export to DaVinci Resolve"
-    → AI shows amber "Not supported" message with explanation
+1. Create a Supabase project.
+2. Run [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql) in the Supabase SQL Editor.
+3. Add the project URL and anonymous key to `apps/web/.env.local`.
+4. Add the service-role key only when a server-side feature requires it. Never prefix it with `NEXT_PUBLIC_`.
 
-### Key Demo Moments
-- The **plan card appears before any edit is made** — always preview first
-- **Refine button** allows iterating without re-typing the full request
-- **One Ctrl+Z** undoes the entire AI editing session
-- **Empty timeline graceful state** — clear call-to-action when no media loaded
-- **Unsupported requests** return helpful messages, never crash
+The repository includes the schema and server/client helpers. The sign-in UI and complete account workflow are not currently implemented.
 
----
+## Development Commands
 
-## Honest Assessment
+```bash
+# Start the web app
+npm run dev
 
-This is a **working hackathon prototype** built on a production-grade video engine. The AI editing workflow (plan → preview → apply → undo) is fully functional. The main gaps are:
-- Cloud auth/save (schema ready, UI pending)
-- Advanced video effects (engine limitation)
-- Large-scale performance testing
+# Run tests across the configured workspaces
+npm test
 
-The foundation is solid for a production build: real frame-accurate editing, validated operations, conversation context, and graceful degradation throughout.
+# Type-check all workspaces
+npm run typecheck
+
+# Build the web app for production
+npm run build --workspace=apps/web
+```
+
+The production build requires the internal packages to be built first; the web workspace's `prebuild` script handles this automatically.
+
+## Repository Layout
+
+```text
+apps/web/       Next.js editor and web experience
+packages/core/  Timeline engine, resolver, playback, and rendering
+packages/react/ React bindings and hooks
+packages/timeline  Timeline user interface
+packages/editor Editor composition and public API
+supabase/       Database migrations
+```
+
+## Current Limitations
+
+- Supabase authentication UI and the complete account workflow are not implemented.
+- Transcription, SRT import, color grading, stabilization, chroma key, and generative audio are not available through the current editing engine.
+- Large media files can be slow to process in a browser; compressed H.264 MP4 is recommended for smoother editing.
+- MP4 export depends on browser support for the required WebCodecs APIs.
