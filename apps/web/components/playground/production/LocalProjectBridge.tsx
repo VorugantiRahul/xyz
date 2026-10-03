@@ -99,9 +99,15 @@ export function LocalProjectBridge() {
         writeLocalProject(store, document)
         return Promise.resolve({ documentVersion: 0 })
       },
-      // A local write has nothing to say that the timeline doesn't already show,
-      // and the indicator this would feed belongs to the server project chrome.
-      onStatus: () => {},
+      onStatus: (status) => {
+        if (status.kind === 'idle' || status.kind === 'saved') {
+          useProjectSaveStore.getState().setSaveStatus('saved')
+        } else if (status.kind === 'saving') {
+          useProjectSaveStore.getState().setSaveStatus('saving')
+        } else if (status.kind === 'dirty') {
+          useProjectSaveStore.getState().setSaveStatus('dirty')
+        }
+      },
     })
     autosaveRef.current = autosave
 

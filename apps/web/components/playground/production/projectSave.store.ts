@@ -1,29 +1,29 @@
 import { create } from 'zustand'
 import type { MissingMedia } from '@elah/editor'
 
-/**
- * Editor state shared between `LocalProjectBridge` (inside `EditorProvider`,
- * where the engine is), which writes it, and `ProjectMediaNotice` (outside it),
- * which reads it.
- */
+export type SaveStatusKind = 'idle' | 'dirty' | 'saving' | 'saved'
+
 interface ProjectSaveState {
-  /**
-   * Clips that came back from storage without a source file that can be
-   * fetched again — a video imported from the user's own device, whose `blob:`
-   * URL died with the session that made it.
-   */
+  projectName: string
+  saveStatus: SaveStatusKind
   missingMedia: MissingMedia[]
 
+  setProjectName: (name: string) => void
+  setSaveStatus: (status: SaveStatusKind) => void
   setMissingMedia: (missing: MissingMedia[]) => void
   reset: () => void
 }
 
 const INITIAL = {
+  projectName: 'Untitled Project',
+  saveStatus: 'saved' as SaveStatusKind,
   missingMedia: [] as MissingMedia[],
 }
 
 export const useProjectSaveStore = create<ProjectSaveState>((set) => ({
   ...INITIAL,
+  setProjectName: (projectName) => set({ projectName }),
+  setSaveStatus: (saveStatus) => set({ saveStatus }),
   setMissingMedia: (missingMedia) => set({ missingMedia }),
   reset: () => set(INITIAL),
 }))
